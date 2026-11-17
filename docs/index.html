@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Romania Food Importers &amp; Distributors — Malee Group (mock-up)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <style>
+    :root {
+      --bg: #07080c;
+      --bg-2: #0d0f15;
+      --card: #14161e;
+      --card-2: #1a1d27;
+      --ink: #eceae3;
+      --muted: #9a978c;
+      --line: #2a2d38;
+      --gold: #d4b06a;
+      --gold-soft: rgba(212,176,106,.14);
+      --green: #5ecf9a;
+      --green-soft: rgba(94,207,154,.14);
+      --blue: #7aa6e8;
+      --blue-soft: rgba(122,166,232,.14);
+      --purple: #c9a0ff;
+      --purple-soft: rgba(201,160,255,.14);
+      --red: #e08a7a;
+      --red-soft: rgba(224,138,122,.14);
+      --amber: #e0b04a;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Libre Franklin", system-ui, sans-serif; }
+    a { color: var(--gold); }
+    a:hover { color: #efd090; }
+    header.app { background: linear-gradient(180deg, #10131c 0%, #0a0c11 100%); border-bottom: 1px solid var(--line); }
+    header.app .wrap, main, footer { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+    header.app .wrap { padding: 28px 20px 22px; }
+    .kicker { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin: 0 0 8px; }
+    h1 { font-family: "Source Serif 4", Georgia, serif; font-weight: 600; font-size: clamp(28px, 4vw, 42px); line-height: 1.15; margin: 0 0 10px; }
+    header.app p { margin: 0 0 8px; color: #d2d0c7; max-width: 78ch; }
+    nav.toc { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 14px; font-size: 13px; }
+    nav.toc a { color: var(--muted); text-decoration: none; border-bottom: 1px solid transparent; }
+    nav.toc a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+    .badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; border-radius: 999px; padding: 2px 8px; vertical-align: middle; }
+    .badge.mock { background: #3a2f14; color: #f0d48a; }
+    .badge.approx { background: #3a2a14; color: #f3d27a; }
+    .badge.conflict { background: var(--red-soft); color: var(--red); }
+    .badge.high { background: var(--green-soft); color: var(--green); }
+    .badge.medium { background: var(--gold-soft); color: var(--gold); }
+    .badge.low { background: #2a2d38; color: var(--muted); }
+    .cat { display: inline-block; font-size: 11px; font-weight: 600; border-radius: 999px; padding: 2px 8px; }
+    .cat.general { background: var(--green-soft); color: var(--green); }
+    .cat.beverages { background: var(--blue-soft); color: var(--blue); }
+    .cat.asian { background: var(--gold-soft); color: var(--gold); }
+    .cat.retail { background: var(--purple-soft); color: var(--purple); }
+    section.block { margin: 28px 0 36px; }
+    h2 { font-family: "Source Serif 4", Georgia, serif; font-size: 26px; font-weight: 600; margin: 0 0 8px; }
+    h3 { font-size: 16px; margin: 0 0 6px; }
+    .lead { color: var(--muted); margin: 0 0 16px; max-width: 85ch; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+    .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+    .kpi .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    .kpi .val { font-family: "Source Serif 4", Georgia, serif; font-size: 28px; font-weight: 600; margin-top: 4px; }
+    .kpi .sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    #map { height: 560px; width: 100%; border-radius: 16px; border: 1px solid var(--line); background: #1b1e28; z-index: 1; }
+    .map-legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+    .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+    .controls input[type=search] { background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font: inherit; min-width: 220px; }
+    .controls button, .rangebar button {
+      border: 1px solid var(--line); background: var(--card); color: var(--muted);
+      border-radius: 999px; padding: 6px 12px; cursor: pointer; font: inherit; font-size: 13px;
+    }
+    .controls button.on, .rangebar button.on { background: #eceae3; color: #111; border-color: #eceae3; }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; background: var(--card-2); cursor: pointer; white-space: nowrap; position: sticky; top: 0; }
+    th:hover { color: var(--ink); }
+    tr:hover td { background: #1b1e28; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .shortlist { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+    .card p { margin: 6px 0 0; color: #c9c6bb; font-size: 14px; }
+    .note { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #171920; color: var(--ink); }
+    .leaflet-popup-content { margin: 12px 14px; font-family: "Libre Franklin", system-ui, sans-serif; font-size: 13px; }
+    .leaflet-popup-content strong { font-size: 15px; }
+    .leaflet-container a { color: var(--gold); }
+    footer { border-top: 1px solid var(--line); padding: 18px 20px 36px; color: var(--muted); font-size: 13px; }
+    ul.plain { margin: 8px 0 0; padding-left: 18px; }
+    ul.plain li { margin: 0 0 8px; }
+    @media (max-width: 700px) {
+      #map { height: 420px; }
+      .kpi .val { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app">
+    <div class="wrap">
+      <div class="kicker">Malee Group PCL (MALEE.BK) · Head of AI desk · Public data only</div>
+      <h1>Romania food importers &amp; distributors</h1>
+      <p>A working map of the companies most useful if Malee wants to put Thai juices, coconut water, canned fruit or plant milk on Romanian shelves — national FMCG distributors, beverage specialists, Asian/ethnic importers, and the two cash-and-carry chains that supply HoReCa and independent shops.</p>
+      <p><span class="badge mock">Mock-up</span> Compiled 17 November 2026 (Asia/Bangkok). Every turnover and headcount is from 2025 annual accounts republished from Ministry of Finance filings. Pins are geocoded from the registered or published office; <span class="badge approx">Approximate</span> means the pin is at street, village or town level, not the door.</p>
+      <nav class="toc">
+        <a href="#kpis">Snapshot</a>
+        <a href="#map-sec">Map</a>
+        <a href="#shortlist">Best-fit partners</a>
+        <a href="#table">Directory</a>
+        <a href="#method">Methodology</a>
+        <a href="#sources">Sources</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="block" id="kpis">
+      <h2>Snapshot</h2>
+      <p class="lead">Fifteen companies, all with a 2025 filed turnover. Grocery multiples such as Lidl and Kaufland also import directly — they are described under Methodology, not plotted, so retail sales do not crowd out distributors.</p>
+      <div class="kpis" id="kpis-row"></div>
+    </section>
+
+    <section class="block" id="map-sec">
+      <h2>Locations</h2>
+      <p class="lead">Markers are coloured by category. Click a pin for address, 2025 turnover and a Malee-fit note. Use the filters to show one category at a time.</p>
+      <div class="controls" id="map-filters"></div>
+      <div id="map"></div>
+      <div class="map-legend" id="legend"></div>
+    </section>
+
+    <section class="block" id="shortlist">
+      <h2>Best-fit partners for Malee</h2>
+      <p class="lead">A shortlist for a first conversation, not an approved partner list. Reasoning is based only on public reach, category fit and the absence of an obvious juice-aisle conflict. No company on this page has been approached.</p>
+      <div class="shortlist">
+        <article class="card">
+          <div class="badge high">High fit</div>
+          <h3>Aquila Part Prod Com</h3>
+          <p>Listed national FMCG distributor in Ploiești, with organised trade, traditional trade, foodservice and vending. 2025 legal-entity turnover was 3.08 bn RON and the group preliminarily reported nearly 3.5 bn RON including recent acquisitions. It already carries food brands of its own and is not a competing juice manufacturer. Best general route into stores and HoReCa.</p>
+        </article>
+        <article class="card">
+          <div class="badge high">High fit</div>
+          <h3>Interbrands Orbico</h3>
+          <p>The largest FMCG distributor in the KeysFin retail/HoReCa ranking: 7.53 bn RON in 2025, about 2,300 employees, 200-plus brands and national coverage of hypermarkets, independents, petrol and HoReCa. Reach is excellent; Malee would be one principal among many, including tobacco and beauty. Worth a conversation for scale.</p>
+        </article>
+        <article class="card">
+          <div class="badge high">High fit · specialist</div>
+          <h3>Belfoods Impex</h3>
+          <p>A much smaller importer (16.4 m RON, 11 staff) that already brings in Asian groceries, including from Thailand, and says it is listed in Carrefour, Kaufland, Auchan and Mega Image. The closest public category match for coconut water, canned fruit and Asian grocery, if Malee wants a specialist rather than a giant generalist.</p>
+        </article>
+        <article class="card">
+          <div class="badge medium">Good specialist</div>
+          <h3>Everbio Distribution</h3>
+          <p>Organic and health-food importer in Arad county (9.3 m RON). Its public catalogue already includes Thai Coco coconut drinks, so the coconut-water listing path is proven, even if the company is small and regional. A complementary partner, not a national exclusive.</p>
+        </article>
+        <article class="card">
+          <div class="badge medium">Good for HoReCa</div>
+          <h3>Marathon Distribution Group</h3>
+          <p>A 1.21 bn RON food and foodservice distributor in Bucharest, with a large SKU book for retail and HoReCa. Useful if the first Malee volumes are aimed at hotels, restaurants and cash-and-carry rather than a full supermarket rollout. The pin is the registered office, which may not be the warehouse.</p>
+        </article>
+        <article class="card">
+          <div class="badge medium">Listing targets</div>
+          <h3>METRO and Selgros</h3>
+          <p>The two cash-and-carry chains (11.91 bn and 4.46 bn RON) are not exclusive distributors, but they are the wholesale shelves used by HoReCa and independent grocers. A listing here sits alongside a distributor relationship, not instead of one. USDA also notes that the large grocery multiples import directly.</p>
+        </article>
+      </div>
+      <p class="note">Coca-Cola HBC, Maspex (Tymbark) and Quadrant-Amroq (PepsiCo) are mapped because they dominate the juice and soft-drink aisle, but they are manufacturer-bottlers and are treated as category competitors, not candidate partners. Cyrom is the exclusive Pfanner importer — a juice specialist with the same conflict. Macromex (frozen/foodservice) and DRIM Daniel (traditional-trade FMCG, Żabka group) are credible second-wave options. Maresi is a branded frozen-food broker; Yamato Express is a small Japanese/Asian HoReCa importer.</p>
+    </section>
+
+    <section class="block" id="table">
+      <h2>Directory</h2>
+      <p class="lead">Click a column header to sort. EUR figures are converted at the BNR 2025 annual average of 1 EUR = 5.0415 RON, and are illustrative, not a company-reported euro account.</p>
+      <div class="controls" id="table-filters"></div>
+      <div class="table-wrap">
+        <table id="dir">
+          <thead>
+            <tr>
+              <th data-key="name">Company</th>
+              <th data-key="category">Category</th>
+              <th data-key="city">City</th>
+              <th class="num" data-key="ron">2025 turnover</th>
+              <th class="num" data-key="employees">Staff</th>
+              <th data-key="fitRank">Malee fit</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block" id="method">
+      <h2>Methodology and caveats</h2>
+      <ul class="plain">
+        <li><strong>What this is.</strong> A public-source shortlist for discussion inside Malee, compiled on 17 November 2026. It is not a due-diligence file, not a credit opinion, and not a claim that any firm wants to represent Malee.</li>
+        <li><strong>How firms were chosen.</strong> National FMCG distributors named in the 2025 KeysFin / Modern Buyer and Ziarul Financiar rankings (Interbrands Orbico, Aquila, DRIM Daniel, plus Marathon and Macromex); the two cash-and-carry wholesalers (METRO, Selgros); the three large beverage bottlers by 2025 CAEN 1107 turnover (Coca-Cola HBC, Quadrant-Amroq, Maspex) and the Pfanner importer Cyrom; specialist importers with a published Asian, Thai or coconut-water offer (Belfoods, Everbio, Yamato); and Maresi Foodbroker as a mid-size international brand broker.</li>
+        <li><strong>What was left out, on purpose.</strong> Tobacco-heavy names that appear in some FMCG distributor rankings — notably Luzan Logistic (1.52 bn RON, 2025) and Punctual Comimpex (1.39 bn RON, 2025) — because their core business is tobacco, not food. Grocery multiples (Lidl, Kaufland, Profi, Carrefour, Mega Image, Penny, Auchan) often import directly, as the USDA FAS Romania Exporter Guide 2026 states; their retail turnover would dominate the map, so they are not plotted. Rauch Romania SRL was struck off in 2024 and is omitted. A trading site, Asian Share, offers Foco juices and Thai ingredients, but a matching legal entity was not confirmed in the registry extracts used, so it is not in the table.</li>
+        <li><strong>Figures.</strong> Turnover is <em>cifra de afaceri</em> for calendar 2025 from annual accounts, as republished by Verti / Risco from Ministry of Finance and ONRC data (registry extracts checked in mid-November 2026). Employee counts are the average number of employees reported for 2025. For Aquila, the legal-entity figure (3,080,897,206 RON) is shown; the group’s preliminary 2025 revenue, including acquired companies, was “nearly RON 3.5 billion” in a Bucharest Stock Exchange report. Euro amounts are converted at the BNR 2025 annual average of 5.0415 RON/EUR (as published on cursbnr.ro) and labelled as conversions.</li>
+        <li><strong>Map.</strong> Coordinates come from the OpenStreetMap Nominatim geocoder, queried on 17 November 2026. Pins marked approximate are at street, village or town level when the exact building was not found. Marathon’s pin is its registered office (an address that may be administrative rather than a warehouse). Belfoods is geocoded to building number 256 on Bulevardul Basarabia; OpenStreetMap labels a school at that number, so the pin may be the plot rather than a dedicated office.</li>
+        <li><strong>Gaps.</strong> A large, independently verified fresh-produce importer was not confirmed to the same standard, so the “fresh” category is empty. Brand lists are only those named on a company site or in a cited article — they are not complete catalogues. Contact people and buyer emails are not published here. DRIM Daniel reported a net loss and negative equity in 2025; Interbrands Orbico and Selgros also reported a 2025 net loss. Those facts are on the filings and should be checked before any commercial commitment.</li>
+      </ul>
+    </section>
+
+    <section class="block" id="sources">
+      <h2>Main sources</h2>
+      <ul class="plain">
+        <li>Ministry of Finance / ONRC filings for 2025, as republished on Verti and Risco company pages (linked on each row). Extracts consulted mid-November 2026.</li>
+        <li>KeysFin analysis for Modern Buyer, “Retail &amp; Horeca Distribution,” on 2025 distributor rankings (Interbrands Orbico 7.5 bn RON, Aquila nearly 3.1 bn RON, DRIM Daniel third). <a href="https://modernbuyer.ro/studiu-keysfin-si-modern-buyer-contextul-de-piata-dificil-a-redus-puternic-profitabilitatea-distribuitorilor-din-retailul-fmcg-si-horeca/" target="_blank" rel="noopener">Modern Buyer article</a>.</li>
+        <li>Ziarul Financiar, “Cei mai mari jucători din economie 2026 — Distribuitori FMCG,” citing Ministry of Finance figures for Interbrands Orbico, Aquila and Luzan. <a href="https://www.zf.ro/cei-mai-mari-jucatori-din-economie-2026/anuarul-cei-mai-mari-jucatori-din-economie-2026-distribuitori-fmcg-23191541" target="_blank" rel="noopener">ZF article</a>.</li>
+        <li>USDA FAS, Romania Exporter Guide Annual, report RO2026-0003, 3 July 2026 — retail-chain landscape and the advice to work with local importers/distributors. <a href="https://fas-prod.azureedge.us/data/gain-report/2026/07/Exporter%20Guide%20Annual_Bucharest_Romania_RO2026-0003.pdf" target="_blank" rel="noopener">GAIN PDF</a>.</li>
+        <li>Aquila 2025 preliminary financial report, Bucharest Stock Exchange, 26 February 2026 (group revenue “nearly RON 3.5 billion”). Company and brand pages linked in the table.</li>
+        <li>BNR 2025 annual average FX, 1 EUR = 5.0415 RON, as published on <a href="https://www.cursbnr.ro/curs-valutar-mediu" target="_blank" rel="noopener">cursbnr.ro</a>.</li>
+        <li>Coordinates: OpenStreetMap Nominatim, 17 November 2026. Map tiles © OpenStreetMap contributors.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>
+    <div class="wrap">Romania Food Importers &amp; Distributors mock-up · compiled 17 November 2026, Asia/Bangkok · public sources only · not for trading, credit or partnership advice · Malee Group internal discussion.</div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+    const EUR_RATE = 5.0415; // BNR 2025 annual average, RON per EUR
+    const CATS = {
+      general: { label: "General food", color: "#5ecf9a" },
+      beverages: { label: "Beverages", color: "#7aa6e8" },
+      asian: { label: "Asian / ethnic", color: "#d4b06a" },
+      retail: { label: "Retail-linked", color: "#c9a0ff" }
+    };
+    const FIT = {
+      high: "High",
+      medium: "Medium",
+      low: "Secondary",
+      conflict: "Category conflict"
+    };
+    const FIT_RANK = { high: 1, medium: 2, low: 3, conflict: 4 };
+
+    const COMPANIES = [
+      {
+        id: "metro", name: "METRO Cash & Carry Romania SRL", cui: "8119423",
+        category: "retail", role: "Cash & carry", city: "Bucharest",
+        address: "Bd. Theodor Pallady nr. 51 N, Clădirea C6, Corp A, Sector 3, Bucharest",
+        lat: 44.4104856, lon: 26.1795758, coordNote: "approximate",
+        coordLabel: "Approximate — Nominatim returned the boulevard, not building 51N.",
+        ron: 11914547569, employees: 3900, year: 2025,
+        brands: "Cash-and-carry grocery and non-food for traders and HoReCa, including METRO own-label.",
+        website: "https://www.metro.ro",
+        fit: "medium",
+        fitNote: "A listing target for HoReCa and independent shops, not an exclusive distributor. Use alongside a distributor, not instead of one.",
+        source: "https://verti.ro/firma/8119423/metro-cash-carry-romania-srl",
+        sourceLabel: "Verti / MFinanțe 2025"
+      },
+      {
+        id: "orbico", name: "Interbrands Orbico SRL", cui: "3786280",
+        category: "general", role: "National FMCG distributor", city: "Bucharest",
+        address: "Str. Sergent Nuțu Ion nr. 44, Corp A, etaj 3, One Cotroceni Park, Sector 5, 050762 Bucharest",
+        lat: 44.4268889, lon: 26.0631450, coordNote: "building",
+        coordLabel: "Geocoded to no. 44, Str. Sergent Ion Nuțu (One Cotroceni Park area).",
+        ron: 7525307341, employees: 2298, year: 2025,
+        brands: "More than 200 brands and about 12,000 SKUs across tobacco, food, non-food, beauty and style (company / trade press). National coverage of modern trade, independents, pharmacies, petrol, drugstores and HoReCa.",
+        website: "https://www.orbico.com/ro/",
+        fit: "high",
+        fitNote: "Largest FMCG distributor by 2025 turnover. Excellent reach; Malee would be one principal in a very broad portfolio that also includes tobacco and beauty. 2025 filing shows a net loss of 38.2 m RON.",
+        source: "https://verti.ro/firma/3786280/interbrands-orbico-srl",
+        sourceLabel: "Verti / MFinanțe 2025"
+      },
+      {
+        id: "selgros", name: "Selgros Cash & Carry SRL", cui: "11805367",
+        category: "retail", role: "Cash & carry (Transgourmet)", city: "Brașov",
+        address: "Calea București nr. 231, Brașov",
+        lat: 45.6260431, lon: 25.6461385, coordNote: "building",
+        coordLabel: "Geocoded to the Selgros site at 231 Calea București.",
+        ron: 4460634728, employees: 4822, year: 2025,
+        brands: "Cash-and-carry grocery for HoReCa and traders; part of Transgourmet / Coop. 23–24 stores noted in the USDA 2026 exporter guide.",
+        website: "https://www.selgros.ro",
+        fit: "medium",
+        fitNote: "Same role as METRO: a wholesale listing target, not a dedicated brand distributor. 2025 filing shows a net loss of 47.3 m RON.",
+        source: "https://verti.ro/firma/11805367/selgros-cash-carry-srl",
+        sourceLabel: "Verti / MFinanțe 2025"
+      },
+      {
+        id: "cchbc", name: "Coca-Cola HBC Romania SRL", cui: "474152",
+        category: "beverages", role: "Manufacturer-bottler", city: "Bucharest",
+        address: "Published HQ: Globalworth Campus, Building B, Str. Ing. George Constantinescu 2–4 / 4B, Sector 2, Bucharest (Pipera). The registry extract used lists the street without a number.",
+        lat: 44.4800376, lon: 26.1164898, coordNote: "building",
+        coordLabel: "Published office geocoded to Globalworth Campus B on Str. George Constantinescu.",
+        ron: 3917728007, employees: 1515, year: 2025,
+        brands: "Coca-Cola system soft drinks and juices bottled or distributed in Romania, including Coca-Cola, Fanta, Sprite and Cappy (company communications).",
+        website: "https://ro.coca-colahellenic.com",
+        fit: "conflict",
+        fitNote: "Dominates the soft-drink and juice aisle. Mapped for market context; not a realistic partner for a competing Thai juice or coconut-water line.",
+        source: "https://verti.ro/firma/474152/coca-cola-hbc-romania-srl",
+        sourceLabel: "Verti / MFinanțe 2025"
+      },
+      {
+        id: "aquila", name: "Aquila Part Prod Com SA", cui: "6484554",
+        category: "general", role: "National FMCG distributor (listed)", city: "Ploiești",
+        address: "Str. Malu Roșu nr. 105A, Ploiești, Prahova",
+        lat: 44.9420694, lon: 25.9983952, coordNote: "approximate",
+        coordLabel: "Approximate — Nominatim returned Strada Malu Roșu, not the 105A building.",
+        ron: 3080897206, employees: 3164, year: 2025,
+        brands: "Own brands include Gradena, LaMasă, Yachtis, JetXpert, OK Mama and ExpertWipes (company / BVB notices). Distributes through organised trade, traditional trade, foodservice and vending. Group 2025 preliminary revenue, including Romtec, Parmafood and KITAX, was nearly 3.5 bn RON.",
+        website: "https://www.aquila.ro",
+        fit: "high",
+        fitNote: "Best general-purpose national partner: food FMCG, all key channels, not a competing juice bottler. Table figure is the legal entity (3.08 bn RON), not the group preliminary 3.5 bn RON.",
+        source: "https://verti.ro/firma/6484554/aquila-part-prod-com-sa",
+        sourceLabel: "Verti / MFinanțe 2025"
+      },
+      {
+        id: "qab", name: "Quadrant-Amroq Beverages SRL", cui: "6811508",
+        category: "beverages", role: "Manufacturer-bottler (PepsiCo)", city: "Bucharest",
+        address: "Calea Văcărești nr. 391, Sector 4, Bucharest",
+        lat: 44.3950674, lon: 26.1217237, coordNote: "building",
+        coordLabel: "Geocoded to Sun Plaza Offices at 391 Calea Văcărești.",
+        ron: 1745595736, employees: 678, year: 2025,
+        brands: "PepsiCo bottler in Romania (Pepsi and other PepsiCo soft drinks). No standalone public website was confirmed for the legal entity.",
+        website: "",
+        fit: "conflict",
+        fitNote: "Beverage manufacturer-bottler and aisle competitor, not a partner candidate for Malee juices or coconut water.",
+        source: "https://verti.ro/firma/6811508/quadrant-amroq-beverages-srl",
+        sourceLabel: "Verti / MFinanțe 2025"
+      },
+      {
+        id: "maspex", name: "Maspex Romania SRL", cui: "3451510",
+        category: "beverages", role: "Manufacturer (juices)", city: "Vălenii de Munte",
+        address: "Str. Ștefan cel Mare nr. 38–40, Vălenii de Munte, Prahova",
+        lat: 45.2114725, lon: 26.0404756, coordNote: "building",
+        coordLabel: "Geocoded to the Tymbark / Maspex site at 38–40 Str. Ștefan cel Mare.",
+        ron: 1260965163, employees: 1640, year: 2025,
+        brands: "Juice and still-drink brands including Tymbark, Tedi and Ciao (trade / market reports). Also a wider Maspex grocery range.",
+        website: "https://www.maspex.ro",
+        fit: "conflict",
+        fitNote: "Romania’s leading juice manufacturer. Direct category conflict with Malee juices; mapped only as aisle context.",
+        source: "https://verti.ro/firma/3451510/maspex-romania-srl",
+        sourceLabel: "Verti / MFinanțe 2025"
+      },
+      {
+        id: "marathon", name: "Marathon Distribution Group SRL", cui: "3379619",
+        category: "general", role: "Food & foodservice distributor", city: "Bucharest",
+        address: "Registered office: Str. Lucrețiu Pătrășcanu nr. 1, bl. G3, ap. 260, Sector 3, Bucharest (may be administrative, not a warehouse).",
+        lat: 44.4305059, lon: 26.1669405, coordNote: "building",
+        coordLabel: "Geocoded to no. 1, Str. Lucrețiu Pătrășcanu — the registered office.",
+        ron: 1207047345, employees: 781, year: 2025,
+        brands: "Company describes a food and foodservice portfolio of more than 4,000 items. Public profile examples include Aviko, Hochland, Olympia and Sarerom — confirm on the current portfolio page.",
+        website: "https://marathon.com.ro",
+        fit: "medium",
+        fitNote: "Strong HoReCa and foodservice distributor. A good route if Malee starts with hotels, restaurants and cash-and-carry rather than a full supermarket launch.",
+        source: "https://verti.ro/firma/3379619/marathon-distribution-group-srl",
+        sourceLabel: "Verti / MFinanțe 2025"
+      },
+      {
+        id: "macromex", name: "Macromex SRL", cui: "5052558",
+        category: "general", role: "Frozen & foodservice distributor", city: "Bucharest",
+        address: "Head office: Calea Dorobanți nr. 32, Sector 1, 010573 Bucharest. Warehouse also published at Str. Italia 1–7, Chiajna, Ilfov.",
+        lat: 44.4488662, lon: 26.0999507, coordNote: "building",
+        coordLabel: "Geocoded to the published head office at 32 Calea Dorobanților.",
+        ron: 905775206, employees: 412, year: 2025,
+        brands: "Own and distributed brands include Edenia, Corso and Casa Gruia (company site). Also associated with Food Glory in trade press. Frozen and ready-to-eat focus, with a national foodservice network.",
+        website: "https://www.macromex.com",
+        fit: "low",
+        fitNote: "Credible foodservice partner, but the core is frozen and ready-to-eat, not ambient juices or coconut water. A second-wave option, not the first call for a ambient beverage launch.",
+        source: "https://verti.ro/firma/5052558/macromex-srl",
+        sourceLabel: "Verti / MFinanțe 2025"
+      },
+      {
+        id: "drim", name: "DRIM Daniel Distribuție FMCG SRL", cui: "15823153",
+        category: "general", role: "Traditional-trade FMCG distributor", city: "Argeșelu",
+        address: "Sat Argeșelu, Comuna Mărăcineni, nr. 74-J, Camera 1, Argeș, 117451",
+        lat: 44.9274021, lon: 24.8711469, coordNote: "approximate",
+        coordLabel: "Approximate — village centroid for Argeșelu; street 74-J was not found in Nominatim.",
+        ron: 828757206, employees: 866, year: 2025,
+        brands: "Unspecialised wholesale of food, beverages and tobacco (CAEN 4639) to traditional trade. Majority-owned by Poland’s Żabka group since late 2023; related retail is operated through Froo România Retail. A public brand list was not found. No official consumer website was found for the legal entity.",
+        website: "",
+        fit: "low",
+        fitNote: "Third in the 2025 KeysFin distributor ranking and useful for traditional trade / convenience. 2025 accounts show a 39.2 m RON net loss and negative equity — check before any commitment. Second-wave, not first call.",
+        source: "https://verti.ro/firma/15823153/drim-daniel-distributie-fmcg-srl",
+        sourceLabel: "Verti / MFinanțe 2025"
+      },
+      {
+        id: "maresi", name: "Maresi Foodbroker SRL", cui: "7010354",
+        category: "general", role: "International brand broker", city: "Arad",
+        address: "Str. 9 Mai nr. 3, 310118 Arad",
+        lat: 46.1655554, lon: 21.3236062, coordNote: "building",
+        coordLabel: "Geocoded to no. 3, Str. 9 Mai.",
+        ron: 115846966, employees: 39, year: 2025,
+        brands: "Partner and own brands named on the company site include Iglo, Ardo, Findus, Alberto, YO, NUK and Barba Stathis — mainly frozen and branded grocery, not juices.",
+        website: "https://www.maresi.ro",
+        fit: "low",
+        fitNote: "A professional mid-size broker of international grocery brands, but the published portfolio is frozen-led. Only a fit if Malee wants a broker model rather than a full national distributor.",
+        source: "https://verti.ro/firma/7010354/maresi-foodbroker-srl",
+        sourceLabel: "Verti / MFinanțe 2025"
+      },
+      {
+        id: "cyrom", name: "Cyrom Romania SRL", cui: "14792768",
+        category: "beverages", role: "Juice importer (Pfanner)", city: "Bucharest",
+        address: "Str. Bâlciului nr. 2, ap. 2, Sector 2, 021502 Bucharest",
+        lat: 44.4382445, lon: 26.1296842, coordNote: "building",
+        coordLabel: "Geocoded to no. 2, Str. Bâlciului.",
+        ron: 105505704, employees: 71, year: 2025,
+        brands: "Exclusive importer and distributor of Pfanner in Romania (company site). Other brands may be carried; only Pfanner is cited here.",
+        website: "https://www.cyromromania.ro",
+        fit: "conflict",
+        fitNote: "A genuine juice specialist, but it already represents a competing juice brand exclusively. Unlikely to be a clean home for Malee juices.",
+        source: "https://verti.ro/firma/14792768/cyrom-romania-srl",
+        sourceLabel: "Verti / MFinanțe 2025"
+      },
+      {
+        id: "belfoods", name: "Belfoods Impex SRL", cui: "17236384",
+        category: "asian", role: "Asian / gourmet importer", city: "Bucharest",
+        address: "Bd. Basarabia nr. 256, Sector 3, Bucharest",
+        lat: 44.4316855, lon: 26.1910671, coordNote: "approximate",
+        coordLabel: "Approximate — geocoded to no. 256, Bd. Basarabia; OpenStreetMap labels a school at this number, so the pin may be the plot rather than a dedicated office.",
+        ron: 16433045, employees: 11, year: 2025,
+        brands: "Direct imports of Asian ingredients from Japan, Korea, Thailand, Vietnam, China and India (company site). Says it is listed in Carrefour, Kaufland, Auchan, Mega Image, specialised shops and HoReCa.",
+        website: "https://belfoodsasia.ro",
+        fit: "high",
+        fitNote: "Best specialist match: already imports from Thailand and is on the main modern-trade shelves. Small (16.4 m RON), so it is a category route, not a national exclusive for all of Malee.",
+        source: "https://verti.ro/firma/17236384/belfoods-impex-srl",
+        sourceLabel: "Verti / MFinanțe 2025"
+      },
+      {
+        id: "everbio", name: "Everbio Distribution SRL", cui: "23986682",
+        category: "general", role: "Organic / specialty importer", city: "Lipova",
+        address: "Registered office: Str. George Coșbuc nr. 40, Lipova, Arad. A shop / order address is also published at Bd. Revoluției nr. 42, Arad.",
+        lat: 46.0912516, lon: 21.6935996, coordNote: "approximate",
+        coordLabel: "Approximate — town centroid for Lipova; the street was not found in Nominatim.",
+        ron: 9330536, employees: 5, year: 2025,
+        brands: "Organic and health-food assortment. Public product pages include Thai Coco coconut beverages made in Thailand.",
+        website: "https://www.everbio.ro",
+        fit: "medium",
+        fitNote: "Already sells a Thai coconut drink, so the coconut-water path is proven. Small and western-Romania based — a complementary specialist, not a national master distributor.",
+        source: "https://verti.ro/firma/23986682/everbio-distribution-srl",
+        sourceLabel: "Verti / MFinanțe 2025"
+      },
+      {
+        id: "yamato", name: "Yamato Express SRL", cui: "38566962",
+        category: "asian", role: "Japanese / Asian HoReCa importer", city: "Bucharest",
+        address: "Șos. Andronache nr. 203, Corp C.20, Birou 1/1Y, etaj 1, Sector 2, Bucharest",
+        lat: 44.4789954, lon: 26.1594364, coordNote: "building",
+        coordLabel: "Geocoded to no. 203, Șos. Andronache.",
+        ron: 2356390, employees: 5, year: 2025,
+        brands: "Japanese and Asian ingredients (nori, soy, panko, sauces, own-label Yamato). Company site says products are imported from Vietnam, Thailand, China, Japan, Russia and the Netherlands, and sold via own shops, online and HoReCa.",
+        website: "https://www.yamatoexpress.ro",
+        fit: "low",
+        fitNote: "Real Thai/Asian importer, but very small (2.4 m RON) and HoReCa/specialist-shop oriented. Useful for sampling in Asian restaurants, not for a supermarket launch.",
+        source: "https://verti.ro/firma/38566962/yamato-express-srl",
+        sourceLabel: "Verti / MFinanțe 2025"
+      }
+    ];
+
+    const fmtRon = (n) => {
+      if (n >= 1e9) return (n/1e9).toFixed(2) + " bn RON";
+      if (n >= 1e6) return (n/1e6).toFixed(1) + " m RON";
+      return n.toLocaleString("en-GB") + " RON";
+    };
+    const fmtEur = (n) => {
+      const e = n / EUR_RATE;
+      if (e >= 1e9) return (e/1e9).toFixed(2) + " bn EUR";
+      if (e >= 1e6) return (e/1e6).toFixed(1) + " m EUR";
+      return Math.round(e).toLocaleString("en-GB") + " EUR";
+    };
+    const fmtStaff = (n) => n.toLocaleString("en-GB");
+
+    let activeCat = "all";
+    let query = "";
+    let sortKey = "ron";
+    let sortDir = -1;
+    let map, markers = {};
+
+    function visible(c) {
+      if (activeCat !== "all" && c.category !== activeCat) return false;
+      if (query) {
+        const q = query.toLowerCase();
+        const blob = [c.name, c.city, c.address, c.brands, c.cui, CATS[c.category].label].join(" ").toLowerCase();
+        if (!blob.includes(q)) return false;
+      }
+      return true;
+    }
+
+    function renderKpis() {
+      const dist = COMPANIES.filter(c => c.category === "general" || c.category === "asian");
+      const topDist = [...COMPANIES].filter(c => c.category === "general").sort((a,b)=>b.ron-a.ron)[0];
+      const asian = COMPANIES.filter(c => c.category === "asian").length;
+      const cities = new Set(COMPANIES.map(c => c.city)).size;
+      document.getElementById("kpis-row").innerHTML = `
+        <div class="kpi"><div class="lbl">Companies mapped</div><div class="val">15</div><div class="sub">All with a 2025 filed turnover</div></div>
+        <div class="kpi"><div class="lbl">Largest distributor</div><div class="val">7.53 bn</div><div class="sub">Interbrands Orbico, 2025, RON</div></div>
+        <div class="kpi"><div class="lbl">Distributor cluster</div><div class="val">${fmtRon(dist.reduce((s,c)=>s+c.ron,0))}</div><div class="sub">10 general + Asian specialists, excl. cash &amp; carry and bottlers</div></div>
+        <div class="kpi"><div class="lbl">Asian / ethnic specialists</div><div class="val">${asian}</div><div class="sub">Belfoods and Yamato · Everbio (general) already lists Thai Coco · ${cities} cities</div></div>`;
+    }
+
+    function filterButtons(el) {
+      const cats = [["all","All"],["general","General food"],["beverages","Beverages"],["asian","Asian / ethnic"],["retail","Retail-linked"]];
+      el.innerHTML = cats.map(([id,label]) => `<button data-cat="${id}" class="${id===activeCat?"on":""}">${label}</button>`).join("") +
+        `<input type="search" placeholder="Search name, city, CUI…" value="${query.replaceAll('"','&quot;')}" />`;
+      el.querySelectorAll("button").forEach(b => b.onclick = () => { activeCat = b.dataset.cat; refresh(); });
+      const inp = el.querySelector("input");
+      inp.addEventListener("input", () => { query = inp.value.trim(); refresh(); });
+    }
+
+    function popupHtml(c) {
+      const approx = c.coordNote === "approximate" ? ` <span class="badge approx">Approximate</span>` : "";
+      const web = c.website ? `<br><a href="${c.website}" target="_blank" rel="noopener">Website</a>` : "";
+      return `<strong>${c.name}</strong><br>
+        <span class="cat ${c.category}">${CATS[c.category].label}</span> · ${c.role}<br>
+        ${c.address}${approx}<br>
+        <strong>${fmtRon(c.ron)}</strong> · ${fmtEur(c.ron)} · ${fmtStaff(c.employees)} staff (2025)<br>
+        <span class="badge ${c.fit}">${FIT[c.fit]}</span> ${c.fitNote}
+        ${web}`;
+    }
+
+    function initMap() {
+      map = L.map("map", { scrollWheelZoom: true }).setView([45.6, 25.2], 6.3);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(map);
+      document.getElementById("legend").innerHTML = Object.entries(CATS).map(([k,v]) =>
+        `<span><i class="dot" style="background:${v.color}"></i>${v.label}</span>`
+      ).join("") + `<span><i class="dot" style="background:#888;box-shadow:0 0 0 2px #f3d27a"></i>Approximate pin</span>`;
+      COMPANIES.forEach(c => {
+        const icon = L.divIcon({
+          className: "",
+          html: `<div style="width:16px;height:16px;border-radius:50%;background:${CATS[c.category].color};border:2px solid ${c.coordNote==="approximate"?"#f3d27a":"#07080c"};box-shadow:0 0 0 1px ${CATS[c.category].color}"></div>`,
+          iconSize: [16,16], iconAnchor: [8,8], popupAnchor: [0,-8]
+        });
+        const m = L.marker([c.lat, c.lon], { icon, title: c.name }).bindPopup(popupHtml(c), { maxWidth: 320 });
+        m.addTo(map);
+        markers[c.id] = m;
+      });
+    }
+
+    function syncMarkers() {
+      COMPANIES.forEach(c => {
+        const m = markers[c.id];
+        if (!m) return;
+        if (visible(c)) {
+          if (!map.hasLayer(m)) m.addTo(map);
+        } else if (map.hasLayer(m)) {
+          map.removeLayer(m);
+        }
+      });
+    }
+
+    function renderTable() {
+      const rows = COMPANIES.filter(visible).sort((a,b) => {
+        let av, bv;
+        if (sortKey === "name" || sortKey === "city" || sortKey === "category") {
+          av = (sortKey === "category" ? CATS[a.category].label : a[sortKey]).toLowerCase();
+          bv = (sortKey === "category" ? CATS[b.category].label : b[sortKey]).toLowerCase();
+          return av < bv ? -sortDir : av > bv ? sortDir : 0;
+        }
+        if (sortKey === "fitRank") { av = FIT_RANK[a.fit]; bv = FIT_RANK[b.fit]; }
+        else { av = a[sortKey]; bv = b[sortKey]; }
+        return (av - bv) * sortDir;
+      });
+      const tb = document.querySelector("#dir tbody");
+      tb.innerHTML = rows.map(c => {
+        const web = c.website ? ` · <a href="${c.website}" target="_blank" rel="noopener">Site</a>` : "";
+        const approx = c.coordNote === "approximate" ? ` <span class="badge approx">Approx. pin</span>` : "";
+        return `<tr>
+          <td><strong>${c.name}</strong><div class="note">CUI ${c.cui} · ${c.role}<br>${c.address}${approx}</div></td>
+          <td><span class="cat ${c.category}">${CATS[c.category].label}</span></td>
+          <td>${c.city}</td>
+          <td class="num"><strong>${fmtRon(c.ron)}</strong><div class="note">${fmtEur(c.ron)} · 2025 accounts</div></td>
+          <td class="num">${fmtStaff(c.employees)}</td>
+          <td><span class="badge ${c.fit}">${FIT[c.fit]}</span><div class="note">${c.fitNote}</div><div class="note" style="margin-top:6px">${c.brands}</div></td>
+          <td><a href="${c.source}" target="_blank" rel="noopener">${c.sourceLabel}</a>${web}</td>
+        </tr>`;
+      }).join("");
+    }
+
+    function refresh() {
+      document.querySelectorAll(".controls").forEach(el => {
+        el.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.cat === activeCat));
+      });
+      syncMarkers();
+      renderTable();
+    }
+
+    renderKpis();
+    filterButtons(document.getElementById("map-filters"));
+    filterButtons(document.getElementById("table-filters"));
+    initMap();
+    document.querySelectorAll("#dir th[data-key]").forEach(th => {
+      th.onclick = () => {
+        const k = th.dataset.key;
+        if (sortKey === k) sortDir *= -1;
+        else { sortKey = k; sortDir = (k === "name" || k === "city" || k === "category") ? 1 : -1; }
+        renderTable();
+      };
+    });
+    refresh();
+  </script>
+</body>
+</html>
